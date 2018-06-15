@@ -18,9 +18,13 @@ module AngularJogging
     config.middleware.insert_before 0, Rack::Cors do
       allow do
         origins '*'
-        resource '*', headers: :any, methods: %i[get post options patch put delete]
+        resource '*', headers: :any, methods: :any
       end
     end
+
+    # config.action_dispatch.default_headers.merge!(
+    #   'Referrer-Policy' => 'no-referrer'
+    # )
 
   end
 end
