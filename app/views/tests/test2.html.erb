@@ -1,0 +1,9 @@
+<ul>
+  <% @jogs.each do |jog| %>
+  <li>
+    <% jog.attributes.each do |k,v| %>
+      <%= "[#{k}: #{v}]" %>
+    <% end %>
+  </li>
+  <% end %>
+</ul>

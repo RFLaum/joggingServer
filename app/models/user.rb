@@ -5,8 +5,10 @@ class User < ApplicationRecord
 
   enum role: %i[user manager admin]
 
-  SPD_Q = "ROUND(CAST(SUM(distance) * 3600 / SUM(time) as numeric), 3)".freeze
-  DIST_Q = "ROUND(CAST(AVG(distance) as numeric), 3)".freeze
+  validates :username, uniqueness: true
+
+  SPD_Q = "CAST(ROUND(CAST(SUM(distance) * 3600 / SUM(time) as numeric), 3) as float)".freeze
+  DIST_Q = "CAST(ROUND(CAST(AVG(distance) as numeric), 3) as float)".freeze
   WK_Q = "CAST(DATE_TRUNC('week', date + 1) - interval '1 day' as date)".freeze
 
   def week_list
@@ -20,6 +22,10 @@ class User < ApplicationRecord
         .order("weekdate DESC")
   end
 
+  def week_count
+    self.jogs.select(WK_Q).distinct.count
+  end
+
   # def single_week(start_date)
   #   return unless start_date.acts_like_date?
   #   monday = start_date + 1
@@ -29,18 +35,29 @@ class User < ApplicationRecord
   # end
 
   def as_json(options = nil)
-    if options[:clean]
+    if options && options[:clean]
       options[:only] = %i[username id role]
     end
     super(options)
   end
 
-  def all_jogs
-    self.jogs
-        .select(:id, :date, :distance,
+  def all_jogs(start_date, end_date)
+    self.jogs_range(start_date, end_date)
+        .select(:id, :date, :distance, :user_id,
                 "time * interval '1 second' as pretty_time",
-                "ROUND(CAST(distance * 3600 / time as numeric), 3) as speed")
+                "CAST(ROUND(CAST(distance * 3600 / time as numeric), 3) as float) as speed")
         .order("date DESC")
+  end
+
+  def jogs_range(start_date, end_date)
+    temp_jogs = self.jogs
+    if start_date
+      temp_jogs = temp_jogs.where("date >= ?", Date.parse(start_date))
+    end
+    if end_date
+      temp_jogs = temp_jogs.where("date <= ?", Date.parse(end_date))
+    end
+    temp_jogs
   end
 
   def viewable_users

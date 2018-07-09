@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180612164758) do
+ActiveRecord::Schema.define(version: 20180704182359) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -28,7 +28,7 @@ ActiveRecord::Schema.define(version: 20180612164758) do
     t.string "username"
     t.integer "role", default: 0
     t.string "password_digest"
-    t.index ["username"], name: "index_users_on_username"
+    t.index ["username"], name: "index_users_on_username", unique: true
   end
 
   add_foreign_key "jogs", "users"

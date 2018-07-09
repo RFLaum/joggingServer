@@ -4,8 +4,12 @@ class JogsController < ApplicationController
   before_action :set_jog, only: %i[update destroy]
 
   def index
-    jogs = @viewed.jogs.order(date: :desc)
-    render json: jogs.paginate(params[:page_num], params[:per_page]), timeify: true
+    begin
+      jogs = @owner.all_jogs(params[:start_date], params[:end_date])
+    rescue ArgumentError
+      render json: "invalid date", status: :bad_request && return
+    end
+    render json: jogs.paginate(params[:page_num], params[:per_page])
   end
 
   def create
@@ -25,8 +29,21 @@ class JogsController < ApplicationController
     render json: @owner.week_list.paginate(params[:page_num], params[:per_page])
   end
 
+  def week_count
+    render json: @owner.week_count
+  end
+
+  # normally returns number of pages, not number of jogs
+  # if we want number of jogs, pass per_page = 0
   def jog_count
-    render json: @viewed.jogs.count
+    begin
+      jogs = @owner.jogs_range(params[:start_date], params[:end_date])
+    rescue ArgumentError
+      render json: "invalid date", status: :bad_request && return
+    end
+    num_jogs = jogs.count
+    per_page = (params[:per_page] || 20).to_f
+    render json: per_page == 0 ? num_jogs : (num_jogs / per_page).ceil
   end
 
   private
@@ -44,13 +61,14 @@ class JogsController < ApplicationController
   end
 
   def jog_params
-    params.require(:jog).permit(:date, :time, :distance)
+    params.require(:jog).permit(:date, :time, :distance, :pretty_time,
+                                :pretty_distance)
   end
 
   def change(jog)
     jog.attributes = jog_params
     if jog.save
-      render json: jog, timeify: true
+      render json: jog, timeify: true, methods: :speed
     else
       render json: jog.errors, status: :unprocessable_entity
     end

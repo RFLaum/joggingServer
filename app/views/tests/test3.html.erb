@@ -1,0 +1,8 @@
+<p><%= @count.as_json %></p>
+<ol>
+  <% @weeks.each do |week| %>
+    <li>
+      <%= week.inspect %>
+    </li>
+  <% end %>
+</ol>

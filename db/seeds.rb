@@ -8,8 +8,8 @@ User.create(username: "manager", password: "password",
 end
 
 User.all.each do |user|
-  50.times do
-    Jog.create(user: user, date: Faker::Date.backward(60),
+  90.times do
+    Jog.create(user: user, date: Faker::Date.backward(30*7),
                time: Faker::Number.between(20, 2*60*60),
                distance: Faker::Number.between(10, 200)/10.0)
   end
